@@ -5,7 +5,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.media.projection.MediaProjection
+import android.media.projection.MediaProjectionManager
 import android.os.IBinder
+import android.hardware.display.DisplayManager
+import android.hardware.display.VirtualDisplay
+
 
 class MediaProjectionService : Service() {
 
@@ -17,6 +22,10 @@ class MediaProjectionService : Service() {
         private const val CHANNEL_ID = "media_projection"
         private const val NOTIFICATION_ID = 1001
     }
+
+    private var mediaProjection: MediaProjection? = null
+    private var mediaProjectionCallback: MediaProjection.Callback? = null
+    private var virtualDisplay: VirtualDisplay? = null
 
     override fun onStartCommand(
         intent: Intent?,
@@ -40,6 +49,53 @@ class MediaProjectionService : Service() {
                 NOTIFICATION_ID,
                 createNotification()
             )
+
+            if (resultCode == -1 && resultData != null) {
+
+                val manager =
+                    getSystemService(MEDIA_PROJECTION_SERVICE)
+                        as MediaProjectionManager
+
+                mediaProjection =
+                    manager.getMediaProjection(
+                        resultCode,
+                        resultData
+                    )
+
+                mediaProjectionCallback = object : MediaProjection.Callback() {
+
+                    override fun onStop() {
+                        println(
+                            "MediaProjectionService: MediaProjection parada"
+                        )
+
+                        virtualDisplay?.release()
+                        virtualDisplay = null
+
+                        mediaProjection = null
+                    }
+                }
+
+                mediaProjection?.registerCallback(
+                    mediaProjectionCallback!!,
+                    null
+                )
+
+                virtualDisplay = mediaProjection?.createVirtualDisplay(
+                    "TermuxSbsCapture",
+                    1272,
+                    2772,
+                    382,
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    null,
+                    null,
+                    null
+                )
+
+                println(
+                    "MediaProjectionService: MediaProjection obtido = ${mediaProjection != null}"
+                )
+            }
         }
 
         return START_NOT_STICKY
