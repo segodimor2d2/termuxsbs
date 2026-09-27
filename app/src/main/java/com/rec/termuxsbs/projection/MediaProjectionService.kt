@@ -15,6 +15,8 @@ import android.os.IBinder
 import android.os.Handler
 import android.os.HandlerThread
 import android.graphics.Color
+import java.io.File
+import java.io.FileOutputStream
 
 
 class MediaProjectionService : Service() {
@@ -50,6 +52,8 @@ class MediaProjectionService : Service() {
 
     private var imageReaderThread: HandlerThread? = null
     private var imageReaderHandler: Handler? = null
+
+    private var frameSaved = false
 
     private fun imageToBitmap(
         image: android.media.Image
@@ -255,6 +259,33 @@ class MediaProjectionService : Service() {
                         if (image != null) {
 
                             val bitmap = imageToBitmap(image)
+
+                            if (!frameSaved) {
+                                try {
+                                    val file =
+                                        File(
+                                            getExternalFilesDir(null),
+                                            "capture_test.png"
+                                        )
+
+                                    FileOutputStream(file).use { output ->
+                                        bitmap.compress(
+                                            Bitmap.CompressFormat.PNG,
+                                            100,
+                                            output
+                                        )
+                                    }
+
+                                    println(
+                                        "MediaProjectionService: FRAME SALVO = ${file.absolutePath}"
+                                    )
+
+                                    frameSaved = true
+
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
 
                             val step = 100
 
