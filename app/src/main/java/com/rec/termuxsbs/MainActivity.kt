@@ -142,20 +142,25 @@ class MainActivity : ComponentActivity() {
 
                         if (captured != null) {
 
-                            val p1 = captured.getPixel(0, 0)
+                            var nonBlack = 0
 
-                            val p2 = captured.getPixel(
-                                captured.width / 2,
-                                captured.height / 2
-                            )
+                            for (y in 200 until captured.height - 200 step 200) {
+                                for (x in 100 until captured.width - 100 step 100) {
 
-                            val p3 = captured.getPixel(
-                                captured.width - 1,
-                                captured.height - 1
-                            )
+                                    val pixel = captured.getPixel(x, y)
+
+                                    val r = android.graphics.Color.red(pixel)
+                                    val g = android.graphics.Color.green(pixel)
+                                    val b = android.graphics.Color.blue(pixel)
+
+                                    if (r != 0 || g != 0 || b != 0) {
+                                        nonBlack++
+                                    }
+                                }
+                            }
 
                             val state =
-                                if (p1 == 0 && p2 == 0 && p3 == 0) {
+                                if (nonBlack == 0) {
                                     "PRETO"
                                 } else {
                                     "CONTEUDO"
@@ -168,13 +173,13 @@ class MainActivity : ComponentActivity() {
                                 println(
                                     "TermuxSbs: DISPLAY=$state " +
                                         "${captured.width}x${captured.height} " +
-                                        "p1=${Integer.toHexString(p1)} " +
-                                        "p2=${Integer.toHexString(p2)} " +
-                                        "p3=${Integer.toHexString(p3)}"
+                                        "nonBlack=$nonBlack"
                                 )
                             }
 
-                            bitmap = captured
+                            if (nonBlack > 0) {
+                                bitmap = captured
+                            }
                         }
 
                         delay(50)
