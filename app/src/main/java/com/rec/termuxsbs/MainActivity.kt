@@ -26,14 +26,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Canvas
 
 import com.rec.termuxsbs.projection.MediaProjectionService
 import com.rec.termuxsbs.ui.theme.TermuxsbsTheme
 
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.graphics.asImageBitmap
+
 
 
 class MainActivity : ComponentActivity() {
+
+    init {
+        println("TermuxSbs: MainActivity CLASS CARREGADA")
+    }
 
     private lateinit var mediaProjectionManager:
         MediaProjectionManager
@@ -89,13 +103,18 @@ class MainActivity : ComponentActivity() {
     ) {
         super.onCreate(savedInstanceState)
 
+        println("TermuxSbs: onCreate")
+
         mediaProjectionManager =
             getSystemService(
                 MEDIA_PROJECTION_SERVICE
             ) as MediaProjectionManager
 
+        println("TermuxSbs: mediaProjectionManager pronto")
 
         setContent {
+
+            println("TermuxSbs: setContent executando")
 
             TermuxsbsTheme {
 
@@ -103,10 +122,11 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf<Bitmap?>(null)
                 }
 
-
                 LaunchedEffect(Unit) {
 
-                    while (bitmap == null) {
+                    println("TermuxSbs: LaunchedEffect iniciou")
+
+                    while (true) {
 
                         val captured =
                             MediaProjectionService
@@ -114,66 +134,131 @@ class MainActivity : ComponentActivity() {
 
                         if (captured != null) {
 
+                            println(
+                                "TermuxSbs: bitmap recebido " +
+                                System.identityHashCode(captured)
+                            )
+
                             bitmap = captured
-
-                        } else {
-
-                            delay(100)
                         }
+
+                        delay(50)
+                    }
+                }
+
+            val testBitmap =
+                remember {
+
+                    Bitmap.createBitmap(
+                        600,
+                        600,
+                        Bitmap.Config.ARGB_8888
+                    ).also { bitmap ->
+
+                        val canvas = Canvas(bitmap)
+
+                        val paint = Paint()
+
+                        paint.color = Color.RED
+
+                        canvas.drawRect(
+                            0f,
+                            0f,
+                            300f,
+                            600f,
+                            paint
+                        )
+
+                        paint.color = Color.GREEN
+
+                        canvas.drawRect(
+                            300f,
+                            0f,
+                            600f,
+                            600f,
+                            paint
+                        )
+
+                        paint.color = Color.BLUE
+
+                        canvas.drawCircle(
+                            300f,
+                            300f,
+                            120f,
+                            paint
+                        )
                     }
                 }
 
 
-                Box(
-                    modifier =
-                        Modifier.fillMaxSize()
-                ) {
+                if (bitmap != null) {
 
-                    if (bitmap != null) {
+                    Row(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
 
                         Image(
-                            bitmap =
-                                bitmap!!.asImageBitmap(),
-
-                            contentDescription =
-                                "Tela capturada",
-
-                            modifier =
-                                Modifier.fillMaxSize(),
-
-                            contentScale =
-                                ContentScale.Fit
+                            bitmap = bitmap!!.asImageBitmap(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxSize(),
+                            contentScale = ContentScale.Fit
                         )
 
-                    } else {
+                        Image(
+                            bitmap = bitmap!!.asImageBitmap(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
 
-                        Column(
-                            modifier =
-                                Modifier.fillMaxSize(),
+                } else {
 
-                            horizontalAlignment =
-                                Alignment.CenterHorizontally,
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
 
-                            verticalArrangement =
-                                Arrangement.Center
+                        Row(
+                            modifier = Modifier.fillMaxSize()
                         ) {
 
-                            Button(
-                                onClick = {
+                            Image(
+                                bitmap = testBitmap.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
 
-                                    val intent =
-                                        mediaProjectionManager
-                                            .createScreenCaptureIntent()
+                            Image(
+                                bitmap = testBitmap.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
 
-                                    captureLauncher
-                                        .launch(intent)
-                                }
-                            ) {
+                        Button(
+                            onClick = {
 
-                                Text(
-                                    "Iniciar captura"
-                                )
-                            }
+                                val intent =
+                                    mediaProjectionManager
+                                        .createScreenCaptureIntent()
+
+                                captureLauncher.launch(intent)
+                            },
+                            modifier = Modifier.align(
+                                Alignment.BottomCenter
+                            )
+                        ) {
+                            Text("Iniciar captura")
                         }
                     }
                 }
@@ -181,3 +266,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
