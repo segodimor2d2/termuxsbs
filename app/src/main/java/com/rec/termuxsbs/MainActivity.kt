@@ -40,6 +40,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.graphics.asImageBitmap
+import android.view.WindowManager
 
 
 
@@ -48,6 +49,8 @@ class MainActivity : ComponentActivity() {
     init {
         println("TermuxSbs: MainActivity CLASS CARREGADA")
     }
+
+    private var lastDisplayState: String? = null
 
     private lateinit var mediaProjectionManager:
         MediaProjectionManager
@@ -103,6 +106,11 @@ class MainActivity : ComponentActivity() {
     ) {
         super.onCreate(savedInstanceState)
 
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         println("TermuxSbs: onCreate")
 
         mediaProjectionManager =
@@ -134,10 +142,37 @@ class MainActivity : ComponentActivity() {
 
                         if (captured != null) {
 
-                            println(
-                                "TermuxSbs: bitmap recebido " +
-                                System.identityHashCode(captured)
+                            val p1 = captured.getPixel(0, 0)
+
+                            val p2 = captured.getPixel(
+                                captured.width / 2,
+                                captured.height / 2
                             )
+
+                            val p3 = captured.getPixel(
+                                captured.width - 1,
+                                captured.height - 1
+                            )
+
+                            val state =
+                                if (p1 == 0 && p2 == 0 && p3 == 0) {
+                                    "PRETO"
+                                } else {
+                                    "CONTEUDO"
+                                }
+
+                            if (state != lastDisplayState) {
+
+                                lastDisplayState = state
+
+                                println(
+                                    "TermuxSbs: DISPLAY=$state " +
+                                        "${captured.width}x${captured.height} " +
+                                        "p1=${Integer.toHexString(p1)} " +
+                                        "p2=${Integer.toHexString(p2)} " +
+                                        "p3=${Integer.toHexString(p3)}"
+                                )
+                            }
 
                             bitmap = captured
                         }
