@@ -44,6 +44,7 @@ import androidx.window.embedding.SplitAttributes
 import androidx.window.embedding.SplitPairFilter
 import androidx.window.embedding.SplitPairRule
 import androidx.window.embedding.RuleController
+import androidx.window.embedding.EmbeddingAspectRatio
 
 
 class MainActivity : ComponentActivity() {
@@ -119,11 +120,33 @@ class MainActivity : ComponentActivity() {
             null
         )
 
+        println(
+            "TermuxSbs: filtro primary = " +
+                splitPairFilter.primaryActivityName
+        )
+
+        println(
+            "TermuxSbs: filtro secondary = " +
+                splitPairFilter.secondaryActivityName
+        )
+
+        println(
+            "TermuxSbs: filtro matches = " +
+                splitPairFilter.matchesActivityIntentPair(
+                    this,
+                    Intent(this, EmbeddedActivity::class.java)
+                )
+        )
+
         val splitRule = SplitPairRule.Builder(
             setOf(splitPairFilter)
         )
             .setMinWidthDp(0)
+            .setMinHeightDp(0)
             .setMinSmallestWidthDp(0)
+            .setMaxAspectRatioInPortrait(
+                EmbeddingAspectRatio.ALWAYS_ALLOW
+            )
             .setDefaultSplitAttributes(
                 SplitAttributes.Builder()
                     .setSplitType(
@@ -133,13 +156,36 @@ class MainActivity : ComponentActivity() {
             )
             .build()
 
+        println("TermuxSbs: splitRule default = ${splitRule.defaultSplitAttributes}")
+
         RuleController.getInstance(this).addRule(splitRule)
 
         println("TermuxSbs: SplitPairRule registrada")
 
+        val registeredRules =
+            RuleController.getInstance(this).getRules()
+
+        println(
+            "TermuxSbs: regras registradas = $registeredRules"
+        )
+
+        println(
+            "TermuxSbs: quantidade de regras = ${registeredRules.size}"
+        )
+
         val embeddingBackend =
             androidx.window.embedding.EmbeddingBackend
                 .getInstance(this)
+
+        println(
+            "TermuxSbs: backend rules = " +
+                embeddingBackend.getRules()
+        )
+
+        println(
+            "TermuxSbs: backend splitSupportStatus = " +
+                embeddingBackend.splitSupportStatus
+        )
 
         println(
             "TermuxSbs: SplitSupportStatus = " +
@@ -157,9 +203,35 @@ class MainActivity : ComponentActivity() {
 
         println("TermuxSbs: SplitPairRule registrada")
 
+        embeddingBackend.addSplitListenerForActivity(
+            this,
+            androidx.core.content.ContextCompat.getMainExecutor(this),
+            androidx.core.util.Consumer { splits ->
+
+                for (split in splits) {
+                    println(
+                        "TermuxSbs: Split primary = " +
+                            split.primaryActivityStack
+                    )
+
+                    println(
+                        "TermuxSbs: Split secondary = " +
+                            split.secondaryActivityStack
+                    )
+
+                    println(
+                        "TermuxSbs: Split attributes = " +
+                            split.splitAttributes
+                    )
+                }
+            }
+        )
+
         startActivity(
             Intent(this, EmbeddedActivity::class.java)
         )
+
+        println("TermuxSbs: EmbeddedActivity iniciada")
 
         android.os.Handler(mainLooper).postDelayed({
 
@@ -172,9 +244,7 @@ class MainActivity : ComponentActivity() {
             println("TermuxSbs: stack vazia = ${stack?.isEmpty}")
             println("TermuxSbs: MainActivity na stack = ${stack?.contains(this)}")
 
-        }, 1000)
-
-        println("TermuxSbs: EmbeddedActivity iniciada")
+        }, 3000)
 
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
