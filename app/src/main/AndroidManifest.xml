@@ -14,6 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Termuxsbs">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -21,17 +22,28 @@
             android:theme="@style/Theme.Termuxsbs"
             android:windowSoftInputMode="adjustResize"
             android:resizeableActivity="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+
+        <activity
+            android:name=".EmbeddedActivity"
+            android:exported="true"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.Termuxsbs" />
 
         <service
             android:name=".projection.MediaProjectionService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
+
+        <property
+            android:name="android.window.PROPERTY_ACTIVITY_EMBEDDING_SPLITS_ENABLED"
+            android:value="true" />
 
     </application>
 

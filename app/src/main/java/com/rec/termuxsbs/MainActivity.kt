@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.Canvas
 
 import com.rec.termuxsbs.projection.MediaProjectionService
 import com.rec.termuxsbs.ui.theme.TermuxsbsTheme
@@ -38,10 +37,13 @@ import androidx.compose.foundation.layout.Row
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.compose.foundation.layout.Row
-import androidx.compose.ui.graphics.asImageBitmap
 import android.view.WindowManager
 
+import android.content.ComponentName
+import androidx.window.embedding.SplitAttributes
+import androidx.window.embedding.SplitPairFilter
+import androidx.window.embedding.SplitPairRule
+import androidx.window.embedding.RuleController
 
 
 class MainActivity : ComponentActivity() {
@@ -105,6 +107,74 @@ class MainActivity : ComponentActivity() {
         savedInstanceState: Bundle?
     ) {
         super.onCreate(savedInstanceState)
+
+        val embeddedComponent = ComponentName(
+            this,
+            EmbeddedActivity::class.java
+        )
+
+        val splitPairFilter = SplitPairFilter(
+            ComponentName(this, MainActivity::class.java),
+            embeddedComponent,
+            null
+        )
+
+        val splitRule = SplitPairRule.Builder(
+            setOf(splitPairFilter)
+        )
+            .setMinWidthDp(0)
+            .setMinSmallestWidthDp(0)
+            .setDefaultSplitAttributes(
+                SplitAttributes.Builder()
+                    .setSplitType(
+                        SplitAttributes.SplitType.ratio(0.5f)
+                    )
+                    .build()
+            )
+            .build()
+
+        RuleController.getInstance(this).addRule(splitRule)
+
+        println("TermuxSbs: SplitPairRule registrada")
+
+        val embeddingBackend =
+            androidx.window.embedding.EmbeddingBackend
+                .getInstance(this)
+
+        println(
+            "TermuxSbs: SplitSupportStatus = " +
+                embeddingBackend.splitSupportStatus
+        )
+
+        val embeddingController =
+            androidx.window.embedding.ActivityEmbeddingController
+                .getInstance(this)
+
+        println(
+            "TermuxSbs: MainActivity embedded=" +
+                embeddingController.isActivityEmbedded(this)
+        )
+
+        println("TermuxSbs: SplitPairRule registrada")
+
+        startActivity(
+            Intent(this, EmbeddedActivity::class.java)
+        )
+
+        android.os.Handler(mainLooper).postDelayed({
+
+            val stack =
+                androidx.window.embedding.ActivityEmbeddingController
+                    .getInstance(this)
+                    .getActivityStack(this)
+
+            println("TermuxSbs: ActivityStack = $stack")
+            println("TermuxSbs: stack vazia = ${stack?.isEmpty}")
+            println("TermuxSbs: MainActivity na stack = ${stack?.contains(this)}")
+
+        }, 1000)
+
+        println("TermuxSbs: EmbeddedActivity iniciada")
 
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
