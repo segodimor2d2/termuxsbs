@@ -110,8 +110,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val embeddedComponent = ComponentName(
-            this,
-            EmbeddedActivity::class.java
+            "com.testfiles",
+            "com.testfiles.MainActivity"
         )
 
         val splitPairFilter = SplitPairFilter(
@@ -228,7 +228,12 @@ class MainActivity : ComponentActivity() {
         )
 
         startActivity(
-            Intent(this, EmbeddedActivity::class.java)
+            Intent().setComponent(
+                ComponentName(
+                    "com.testfiles",
+                    "com.testfiles.MainActivity"
+                )
+            )
         )
 
         println("TermuxSbs: EmbeddedActivity iniciada")
